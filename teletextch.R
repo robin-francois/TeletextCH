@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript:x
+#!/usr/bin/Rscript
 # ENABLE command line arguments
 
 rm(list=ls())
