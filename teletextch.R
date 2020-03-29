@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/bin/Rscript:x
 # ENABLE command line arguments
 
 rm(list=ls())
@@ -27,16 +27,16 @@ a <- GET(url)
 
 ## is it a new one or an old one?
 crea.new <- dmy_hms(a$headers$'x-server-createdate')
-crea.old <- ymd_hms(readLines("lastdate.txt", warn=F))
+crea.old <- ymd_hms(readLines("/app/persistent/lastdate.txt", warn=F))
 
 ## if a new one, then…
 if (crea.new != crea.old) {
 	
 	## record your Twitter app
-	api_key <- ""
-	api_secret <- ""
-	access_token <- ""
-	access_token_secret <- ""
+        api_key <- "XXXX"
+	api_secret <- "XXXXX"
+	access_token <- "XXXXXXX"
+	access_token_secret <- "XXXX"
 
 	## callback url http://127.0.0.1:1410
 
@@ -45,17 +45,17 @@ if (crea.new != crea.old) {
 	setup_twitter_oauth(api_key, api_secret, access_token, access_token_secret)
 
 	## we download the image
-	download.file(url, "hey.gif")
+	download.file(url, "/app/persistent/hey.gif")
 
 	## you need to have ImageMagick installed in order to use "convert"
-	system("convert -verbose -coalesce hey.gif hey.png")
+	system("convert -verbose -coalesce /app/persistent/hey.gif /app/persistent/hey.png")
 
 	## we add columns to the left and the right in order to fit in Twitter format
-	d <- readPNG("hey.png")
+	d <- readPNG("/app/persistent/hey.png")
         d <- d[,,1:3]
 
 	## hey2.png must be manually created during the initialisation phase
-	d2 <- readPNG("hey2.png")
+	d2 <- readPNG("/app/persistent/hey2.png")
         d2 <- d2[,,1:3]
 
 	## debug
@@ -73,19 +73,19 @@ if (crea.new != crea.old) {
 	if (sum(d != d2) != 0) {	
 		
 		## let's replace hey2.png for comparison next time
-		writePNG(d,"hey2.png")			
+		writePNG(d,"/app/persistent/hey2.png")			
 		
 		## we remove the first two lines for the OCR
 		# Previoulsy removing up to 42, now 36 for more space above text to improve OCR 
-		writePNG(d[36:460,,],"hey3.png")
+		writePNG(d[36:460,,],"/app/persistent/hey3.png")
 		
 		## the OCR
-		txt <- ocr("hey3.png", engine=fra)
+		txt <- ocr("/app/persistent/hey3.png", engine=fra)
 		
 		## post tweet
-		updateStatus(str_split(txt, "\n")[[1]][1], mediaPath="hey2.png")
+		updateStatus(str_split(txt, "\n")[[1]][1], mediaPath="/app/persistent/hey2.png")
 	}
 	
 	## update the date
-	cat(as.character(crea.new), file="lastdate.txt")	
+	cat(as.character(crea.new), file="/app/persistent/lastdate.txt")	
 }
