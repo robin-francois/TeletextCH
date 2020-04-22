@@ -1,8 +1,9 @@
-#!/usr/bin/Rscript
+#!/usr/bin/Rscript:x
 # ENABLE command line arguments
 
 rm(list=ls())
 
+library(dplyr)
 library(httr)		# used to download Teletext images
 library(lubridate)	# deals with dates
 library(twitteR)	# obvious
@@ -33,10 +34,10 @@ crea.old <- ymd_hms(readLines("/app/persistent/lastdate.txt", warn=F))
 if (crea.new != crea.old) {
 	
 	## record your Twitter app
-        api_key <- "XXXX"
-	api_secret <- "XXXXX"
-	access_token <- "XXXXXXX"
-	access_token_secret <- "XXXX"
+        api_key <- "XXX"
+	api_secret <- "XXXX"
+	access_token <- "XXXX"
+	access_token_secret <- "XXX"
 
 	## callback url http://127.0.0.1:1410
 
@@ -49,6 +50,7 @@ if (crea.new != crea.old) {
 
 	## you need to have ImageMagick installed in order to use "convert"
 	system("convert -verbose -coalesce /app/persistent/hey.gif /app/persistent/hey.png")
+	system("convert -verbose /app/persistent/hey.png -fill black -fuzz 30% +opaque '#ffff00' /app/persistent/title.png")
 
 	## we add columns to the left and the right in order to fit in Twitter format
 	d <- readPNG("/app/persistent/hey.png")
@@ -58,6 +60,9 @@ if (crea.new != crea.old) {
 	d2 <- readPNG("/app/persistent/hey2.png")
         d2 <- d2[,,1:3]
 
+	title <-readPNG("/app/persistent/title.png")
+	title <- title[,,1:3]
+
 	## debug
 	# test_value <- sum(d != d2) / length(d)
   	# cat("\nLe pourcentage de pixels différents est de ", test_value, "\n")
@@ -66,7 +71,7 @@ if (crea.new != crea.old) {
 	## it probably means that a misspell has been corrected
 	## in that case we delete the last status before going on
 	if (sum(d != d2) / length(d) > 0 && sum(d != d2) / length(d) < .03) {
-		deleteStatus(userTimeline("teletextch", 1)[[1]])
+		deleteStatus(userTimeline("teletext_ch_fr", 1)[[1]])
 	}
 
 	## if the current page is a new one or a corrected one, we post it
@@ -77,10 +82,25 @@ if (crea.new != crea.old) {
 		
 		## we remove the first two lines for the OCR
 		# Previoulsy removing up to 42, now 36 for more space above text to improve OCR 
-		writePNG(d[36:460,,],"/app/persistent/hey3.png")
+		writePNG(title[36:460,,],"/app/persistent/hey3.png")
 		
-		## the OCR
-		txt <- ocr("/app/persistent/hey3.png", engine=fra)
+
+		# Getting OCR data for FRA and ENG engines
+		stat <- ocr_data("/app/persistent/hey3.png", engine=fra)
+		stat2 <- ocr_data("/app/persistent/hey3.png")
+
+		# Calculating mean of confidence for both engines
+		mean = stat %>%
+			summarise(mean = mean(confidence))
+		mean2 = stat2 %>%
+			summarise(mean = mean(confidence))
+
+		# Selecting the best confidence
+		if (mean > mean2) {
+			txt <- ocr("/app/persistent/hey3.png", engine=fra)
+		} else {
+			txt <- ocr("/app/persistent/hey3.png")
+		}
 		
 		## post tweet
 		updateStatus(str_split(txt, "\n")[[1]][1], mediaPath="/app/persistent/hey2.png")
