@@ -1,7 +1,9 @@
-#!/usr/bin/Rscript:x
+#!/usr/bin/env Rscript
 # ENABLE command line arguments
 
 rm(list=ls())
+
+args = commandArgs(trailingOnly=TRUE)
 
 library(dplyr)
 library(httr)		# used to download Teletext images
@@ -16,6 +18,8 @@ library(stringr)	# split expressions
 
 ## preparing tesseract french engine
 fra <- tesseract("fra")
+deu <- tesseract("deu")
+
 
 ## initialisation (uncomment/comment: only the first time!)
 # a <- GET("http://api.teletext.ch/online/pics/medium/RTSUn_103-0.gif")
@@ -34,10 +38,7 @@ crea.old <- ymd_hms(readLines("/app/persistent/lastdate.txt", warn=F))
 if (crea.new != crea.old) {
 	
 	## record your Twitter app
-        api_key <- "XXX"
-	api_secret <- "XXXX"
-	access_token <- "XXXX"
-	access_token_secret <- "XXX"
+        source("/app/persistent/secrets.R")
 
 	## callback url http://127.0.0.1:1410
 
